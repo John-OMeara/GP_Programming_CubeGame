@@ -183,6 +183,17 @@ void Game::run()
 
 }
 
+bool Game::checkCollision(glm::mat4 a, glm::mat4 b)
+{
+	if ((glm::abs(a[3].x - b[3].x) < 2) &&
+		(glm::abs(a[3].y - b[3].y) < 2) &&
+		(glm::abs(a[3].z - b[3].z) < 2))
+	{
+		return true;
+	}
+	return false;
+}
+
 void Game::initialize()
 {
 	srand(time(NULL));
@@ -383,22 +394,36 @@ void Game::update()
 #if (DEBUG >= 2)
 	DEBUG_MSG("Updating...");
 #endif
+	system("CLS");
 
-	//m_cubeModels.at(1) = translate(m_cubeModels.at(1), glm::vec3(0.001, 0, 0));
-	//m_cubeModels.at(1) = rotate(m_cubeModels.at(1), -0.001f, glm::vec3(0, 0.001, 0));
+	// TO-DO: Have the NPCs chance their facings every reset. Player must match one of these
 
 	for (int i = 0; i < m_cubeModels.size(); i++)
 	{
-		//float movement = (rand() % 1000 + 1)*(0.0001);
-		m_cubeModels.at(i) = translate(m_cubeModels.at(i), glm::vec3(0, 0, 0.01/*movement*/));
-		//m_cubeModels.at(i) = translate(m_cubeModels.at(1), glm::vec3(0.001, 0, 0));
-		//m_cubeModels.at(i) = rotate(m_cubeModels.at(1), -0.001f, glm::vec3(0, 0.001, 0));
+		m_cubeModels.at(i) = translate(m_cubeModels.at(i), glm::vec3(0, 0, 0.1));
 
-		std::cout << m_cubeModels.at(i)[3].z << std::endl;
+		//std::cout << m_cubeModels.at(i)[3].z << std::endl;
 
 		if (m_cubeModels.at(i)[3].z > 10)
 		{
+
 			m_cubeModels.at(i)[3].z = -50;
+		}
+
+		if (checkCollision(model, m_cubeModels.at(i)))
+		{
+			std::cout << "Collision with cube number " << (i + 1) << endl;
+
+			if (m_npc.at(i).m_currentFacing == m_player.m_currentFacing)
+			{
+				std::cout << "MATCHING FACE!!" << std::endl;
+				match = true;
+			}
+			else
+			{
+				std::cout << "WRONG FACE!!" << std::endl;
+				match = false;
+			}
 		}
 	}
 }
@@ -420,14 +445,11 @@ void Game::render()
 	int x = Mouse::getPosition(window).x;
 	int y = Mouse::getPosition(window).y;
 
-	string hud = "WHERE'S THE MOUSE?!?! \nOH DAMN IT'S AT ["
-		+ string(toString(x))
-		+ "]["
-		+ string(toString(y))
-		+ "] !!!"
+	string hud = "Current Facing: "
+		+ string(toString(m_player.m_currentFacing))
 		+ "\n"
-		+ "Current Facing: "
-		+ string(toString(m_player.m_currentFacing));
+		+ "Matching Face: "
+		+ string(toString(match));
 
 	Text text(hud, font);
 

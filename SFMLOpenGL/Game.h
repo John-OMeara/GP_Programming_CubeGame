@@ -36,11 +36,15 @@ public:
 	Game(sf::ContextSettings settings);
 	~Game();
 	void run();
+
+	bool checkCollision(glm::mat4 a, glm::mat4 b);
+
 private:
 	Player m_player;
 	std::vector<NPC> m_npc;
 
-	bool press;
+	bool press = false;
+	bool match = false;
 
 	float m_90deg = 1.5708f;
 
