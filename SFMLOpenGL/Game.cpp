@@ -49,6 +49,7 @@ Game::Game() :
 	window(VideoMode(800, 600), 
 	"Introduction to OpenGL Texturing")
 {
+
 }
 
 Game::Game(sf::ContextSettings settings) : 
@@ -82,30 +83,95 @@ void Game::run()
 				isRunning = false;
 			}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+#pragma region rotation
+			// KEEP FOR REFERENCE, DELETE WHEN DONE
+
+
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			//{
+			//	// Set Model Rotation
+			//	model = rotate(model, 0.01f, glm::vec3(0, 1, 0)); // Rotate
+			//}
+			//
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			//{
+			//	// Set Model Rotation
+			//	model = rotate(model, -0.01f, glm::vec3(0, 1, 0)); // Rotate
+			//}
+			//
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			//{
+			//	// Set Model Rotation
+			//	model = rotate(model, -0.01f, glm::vec3(1, 0, 0)); // Rotate
+			//}
+			//
+			//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			//{
+			//	// Set Model Rotation
+			//	model = rotate(model, 0.01f, glm::vec3(1, 0, 0)); // Rotate
+			//}
+#pragma endregion
+
+			// Move Left
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
-				// Set Model Rotation
-				model = rotate(model, 0.01f, glm::vec3(0, 1, 0)); // Rotate
+				switch (m_player.m_currentFacing)
+				{
+				case 0:
+					model = translate(model, glm::vec3(-0.1, 0, 0));
+					break;
+				case 1:
+					model = translate(model, glm::vec3(0, 0, -0.1));
+					break;
+				case 2:
+					model = translate(model, glm::vec3(0.1, 0, 0));
+					break;
+				case 3:
+					model = translate(model, glm::vec3(0, 0, 0.1));
+				default:
+					break;
+				}
+				
+			}
+			// Move right
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+			{
+				switch (m_player.m_currentFacing)
+				{
+				case 0:
+					model = translate(model, glm::vec3(0.1, 0, 0));
+					break;
+				case 1:
+					model = translate(model, glm::vec3(0, 0, 0.1));
+					break;
+				case 2:
+					model = translate(model, glm::vec3(-0.1, 0, 0));
+					break;
+				case 3:
+					model = translate(model, glm::vec3(0, 0, -0.1));
+				default:
+					break;
+				}
 			}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !press)
 			{
-				// Set Model Rotation
-				model = rotate(model, -0.01f, glm::vec3(0, 1, 0)); // Rotate
-			}
+				press = true;
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			{
-				// Set Model Rotation
-				model = rotate(model, -0.01f, glm::vec3(1, 0, 0)); // Rotate
-			}
+				m_player.m_currentFacing++;
+				if (m_player.m_currentFacing >= 4)
+				{
+					m_player.m_currentFacing = 0;
+				}
 
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+				model = rotate(model, m_90deg, glm::vec3(0, 1, 0));
+			}
+			if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 			{
-				// Set Model Rotation
-				model = rotate(model, 0.01f, glm::vec3(1, 0, 0)); // Rotate
+				press = false;
 			}
 		}
+
 		update();
 		render();
 	}
@@ -296,11 +362,12 @@ void Game::initialize()
 	{
 		// Model matrix
 		m_cubeModels.push_back(mat4(1.0f));
+		m_npc.push_back(NPC());
 	}
-	//// Model matrix
-	//model = mat4(
-	//	1.0f					// Identity Matrix
-	//	);
+
+	m_cubeModels.at(0)[3].x = -5;
+	m_cubeModels.at(1)[3].x = 0;
+	m_cubeModels.at(2)[3].x = 5;
 
 	// Enable Depth Test
 	glEnable(GL_DEPTH_TEST);
@@ -318,11 +385,21 @@ void Game::update()
 #endif
 
 	//m_cubeModels.at(1) = translate(m_cubeModels.at(1), glm::vec3(0.001, 0, 0));
+	//m_cubeModels.at(1) = rotate(m_cubeModels.at(1), -0.001f, glm::vec3(0, 0.001, 0));
 
-	for (glm::mat4 model : m_cubeModels)
+	for (int i = 0; i < m_cubeModels.size(); i++)
 	{
-		float movement = (rand() % 5 + 01)*(0.01);
-		model = translate(model, glm::vec3(1, /*movement*/0, 0));
+		//float movement = (rand() % 1000 + 1)*(0.0001);
+		m_cubeModels.at(i) = translate(m_cubeModels.at(i), glm::vec3(0, 0, 0.01/*movement*/));
+		//m_cubeModels.at(i) = translate(m_cubeModels.at(1), glm::vec3(0.001, 0, 0));
+		//m_cubeModels.at(i) = rotate(m_cubeModels.at(1), -0.001f, glm::vec3(0, 0.001, 0));
+
+		std::cout << m_cubeModels.at(i)[3].z << std::endl;
+
+		if (m_cubeModels.at(i)[3].z > 10)
+		{
+			m_cubeModels.at(i)[3].z = -50;
+		}
 	}
 }
 
@@ -343,11 +420,14 @@ void Game::render()
 	int x = Mouse::getPosition(window).x;
 	int y = Mouse::getPosition(window).y;
 
-	string hud = "Heads Up Display ["
+	string hud = "WHERE'S THE MOUSE?!?! \nOH DAMN IT'S AT ["
 		+ string(toString(x))
 		+ "]["
 		+ string(toString(y))
-		+ "]";
+		+ "] !!!"
+		+ "\n"
+		+ "Current Facing: "
+		+ string(toString(m_player.m_currentFacing));
 
 	Text text(hud, font);
 
@@ -393,6 +473,7 @@ void Game::render()
 
 	z_offsetID = glGetUniformLocation(progID, "sv_z_offset");
 	if (z_offsetID < 0) { DEBUG_MSG("z_offsetID not found"); };
+
 
 	createCube(model);
 	for (glm::mat4 model : m_cubeModels)

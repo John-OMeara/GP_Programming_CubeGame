@@ -19,6 +19,9 @@
 
 #include <Debug.h>
 
+#include <Player.h>
+#include <NPC.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -34,6 +37,13 @@ public:
 	~Game();
 	void run();
 private:
+	Player m_player;
+	std::vector<NPC> m_npc;
+
+	bool press;
+
+	float m_90deg = 1.5708f;
+
 	RenderWindow window;
 	bool isRunning = false;
 	void initialize();
